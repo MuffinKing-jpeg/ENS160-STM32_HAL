@@ -13,12 +13,12 @@ Git: https://github.com/MuffinKing-jpeg")
 
 file(GLOB ENS160_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}//Src/*.c)
 
-target_include_directories(aht20 INTERFACE
+target_include_directories(ens160 INTERFACE
 ${CMAKE_CURRENT_SOURCE_DIR}/Inc
 )
 
 target_sources(ens160 PUBLIC
-    ${AHT20_SRC_FILES}
+    ${ENS160_SRC_FILES}
     # Add user sources here
 )
 
