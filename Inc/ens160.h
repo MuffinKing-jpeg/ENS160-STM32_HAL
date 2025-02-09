@@ -21,7 +21,7 @@
 #define ENS160_REG_COMMAND 0x12     // [1 Byte] Additional System Commands (Read/Write)
 #define ENS160_REG_TEMP_IN 0x13     // [2 Bytes] Host Ambient Temperature Input (Read/Write)
 #define ENS160_REG_RH_IN 0x15       // [2 Bytes] Host Relative Humidity Input (Read/Write)
-#define ENS160_REG_DATA_STATUS 0x20 // [1 Byte] Status of Sensor Data (Read-Only)
+#define ENS160_REG_DEVICE_STATUS 0x20 // [1 Byte] Status of Sensor Data (Read-Only)
 #define ENS160_REG_DATA_AQI 0x21    // [1 Byte] Air Quality Index (Read-Only)
 #define ENS160_REG_DATA_TVOC 0x22   // [2 Bytes] TVOC Concentration in ppb (Read-Only)
 #define ENS160_REG_DATA_ECO2 0x24   // [2 Bytes] Equivalent CO2 Concentration in ppm (Read-Only)
@@ -60,18 +60,27 @@
 #define ENS160_CONFIG_INTDAT (1 << 1)  // INTn Pin Asserted on Data Register Update
 #define ENS160_CONFIG_INTEN (1 << 0)   // INTn Pin Enable
 
-#define ENS160_STATUS_MODE (1 << 7)     // OPMODE Running Indicator
-#define ENS160_STATUS_ERR (1 << 6)      // Error Indicator
+#define ENS160_STATUS_STATAS (1 << 7)     // OPMODE Running Indicator
+#define ENS160_STATUS_STATER (1 << 6)      // Error Indicator
 #define ENS160_STATUS_VALIDITY (3 << 2) // Data Validity Flag
 #define ENS160_STATUS_NEWDAT (1 << 1)   // New Data Available
 #define ENS160_STATUS_NEWGPR (1 << 0)   // New GPR Data Available
 
- typedef enum 
+typedef enum 
 {
     ENS160_OPMODE_DEEP_SLEEP, // Deep Sleep Mode
     ENS160_OPMODE_IDLE,       // Idle Mode
     ENS160_OPMODE_STANDARD,   // Standard Gas Sensing Mode
 }ENS160_OPMODE;
+
+typedef enum
+{
+    ENS160_VALID_OK,            // All clear
+    ENS160_VALID_WARMUP,        // Warm-up stage
+    ENS160_VALID_STARTUP,       // Initial start-up phase
+    ENS160_VALID_ERR            // Error, read GPR
+
+}ENS160_VALIDITY;
 
 typedef enum 
 {
@@ -79,7 +88,9 @@ typedef enum
     ENS160_NO_ANSWER,    // Communication problem
     ENS160_WRONG_DEVICE, // PART_ID register does not match
     ENS160_BUSY,         // Devise is busy
-    ENS160_WARM_UP,      // Device in warm-up stage
+    ENS160_WARMUP,      // Device in warm-up stage
+    ENS160_STARTUP, 
+    ENS160_ERROR
 }ENS160_ErrCode;
 
 typedef struct
@@ -104,11 +115,13 @@ HAL_StatusTypeDef ENS160_ReadData(ENS160_DeviceType *dev);
 HAL_StatusTypeDef ENS160_ChangeMode(ENS160_DeviceType *dev, ENS160_OPMODE mode);
 HAL_StatusTypeDef ENS160_UpdateConfig(ENS160_DeviceType *dev, uint8_t config);
 HAL_StatusTypeDef ENS160_UpdateEnvironment(ENS160_DeviceType *dev, float *temp, float *humidity);
+HAL_StatusTypeDef ENS160_ReadData(ENS160_DeviceType *dev);
 
 // LOW level below
 HAL_StatusTypeDef ENS160_WriteRegister(ENS160_DeviceType *dev, uint8_t dev_register, uint8_t *pData, uint16_t size);
 HAL_StatusTypeDef ENS160_ReadRegister(ENS160_DeviceType *dev, uint8_t dev_register, uint8_t *pData, uint16_t size);
 HAL_StatusTypeDef ENS160_IOResultHandler(HAL_StatusTypeDef result, ENS160_DeviceType *dev);
+
 
 #ifdef ENS160_ENABLE_FULL_READ
 

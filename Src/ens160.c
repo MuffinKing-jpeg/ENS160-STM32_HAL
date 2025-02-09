@@ -112,6 +112,46 @@ HAL_StatusTypeDef ENS160_ChangeMode(ENS160_DeviceType *dev, ENS160_OPMODE mode)
     return ENS160_WriteRegister(dev, ENS160_REG_OPMODE, &mode, 1);
 }
 
+HAL_StatusTypeDef ENS160_ReadData(ENS160_DeviceType *dev)
+{
+    uint8_t data_buffer[6] = {0};
+    ENS160_ReadRegister(dev,ENS160_REG_DEVICE_STATUS, data_buffer, 6);
+
+    dev->status = data_buffer[0];
+
+    uint8_t data_validity = (dev->status & ENS160_STATUS_VALIDITY) >> 2;
+
+    if (dev->status & ENS160_STATUS_STATER)
+    {
+        dev->err_code = ENS160_ERROR;
+        return HAL_ERROR;
+    }
+
+    switch (data_validity)
+    {
+    case ENS160_VALID_WARMUP:
+        dev->err_code = ENS160_WARMUP;
+        return HAL_BUSY;
+        break;
+    case ENS160_VALID_ERR:
+        dev->err_code = ENS160_ERROR;
+        return HAL_ERROR;
+    default:
+        if (data_validity == ENS160_VALID_STARTUP )
+        {
+            dev->err_code = ENS160_STARTUP;
+        }
+        
+        dev->AQI = data_buffer[1];
+        dev->TVOC = (data_buffer[3] << 8) | data_buffer[2];
+        dev->ECO2 = (data_buffer[5] << 8) | data_buffer[4];
+        break;
+    }
+
+
+    return HAL_OK;
+}
+
 #ifdef ENS160_ENABLE_FULL_READ
 uint8_t ENS160_Memory[ENS160_MEMORY_SIZE] = {0};
 HAL_StatusTypeDef ENS160_FullRead(ENS160_DeviceType *dev)
